@@ -8,10 +8,10 @@ class CustomFilters:
     async def owner_filter(self, _, update):
         user = update.from_user or update.sender_chat
         return user.id == Config.OWNER_ID
-
     owner = create(owner_filter)
-
     async def authorized_user(self, _, update):
+        if Config.PUBLIC_MODE:
+            return True        
         user = update.from_user or update.sender_chat
         uid = user.id
         chat_id = update.chat.id
@@ -43,9 +43,7 @@ class CustomFilters:
                 or not auth_chats[chat_id]
             )
         )
-
     authorized = create(authorized_user)
-
     async def sudo_user(self, _, update):
         user = update.from_user or update.sender_chat
         uid = user.id
@@ -55,5 +53,4 @@ class CustomFilters:
             and user_data[uid].get("SUDO")
             or uid in sudo_users
         )
-
     sudo = create(sudo_user)

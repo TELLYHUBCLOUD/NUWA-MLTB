@@ -1,7 +1,6 @@
 from importlib import import_module
 from ast import literal_eval
 from os import getenv
-
 from bot import LOGGER
 
 
@@ -13,6 +12,7 @@ class Config:
     BASE_URL = ""
     BASE_URL_PORT = 80
     BOT_TOKEN = ""
+    PUBLIC_MODE = False    
     BUZZHEAVIER_ACCOUNT_ID = ""
     BUZZHEAVIER_FOLDER_ID = ""
     GOFILE_API_KEY = ""
