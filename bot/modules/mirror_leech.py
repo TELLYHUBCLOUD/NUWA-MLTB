@@ -269,6 +269,7 @@ class Mirror(TaskListener):
             return
 
         if reply_to:
+            self.file_details = {"caption": reply_to.caption}
             file_ = (
                 reply_to.document
                 or reply_to.photo

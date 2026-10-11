@@ -1,6 +1,8 @@
 from aiofiles.os import path as aiopath, listdir, remove
 from asyncio import sleep, gather
 from html import escape
+from mimetypes import guess_type
+from os import path as ospath
 from requests import utils as rutils
 
 from ... import (
@@ -273,6 +275,11 @@ class TaskListener(TaskConfig):
 
         self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
         self.size = await get_path_size(up_dir)
+
+        if self.is_leech and self.is_file:
+            filename = ospath.basename(up_path)
+            self.file_details["filename"] = filename
+            self.file_details["mime_type"] = guess_type(filename)[0] or "text/plain"
 
         if self.is_leech and not self.compress:
             await self.proceed_split(up_path, gid)

@@ -87,7 +87,7 @@ link6 will get uploaded normally alone
 
 thumb = """<b>Thumbnail for current task</b>: -t
 
-/cmd link -t tg-message-link (doc or photo) or none (file without thumb)"""
+/cmd link -t tg-message-link (doc or photo) or direct-image-url, or none (file without thumb)"""
 
 split_size = """<b>Split size for current task</b>: -sp
 
@@ -438,6 +438,8 @@ user_settings_text = {
 * h:id/@username(hybrid leech) h: to upload files by bot and user based on file size.
 * id/@username|topic_id(leech in specific chat and topic) add | without space and write topic id after chat id or username. Timeout: 60 sec""",
     "LEECH_FILENAME_PREFIX": r"Send Leech Filename Prefix. You can add HTML tags. Example: <code>@mychannel</code>. Timeout: 60 sec",
+    "LEECH_CAPTION": r"""Send Leech Captions template. HTML allowed.
+Replaces the whole caption. Fill in {filename} {size} {duration} {quality} {languages} {subtitles} {md5_hash} {mime_type} {prefilename} {precaption}, then add |find:replace[:count] parts to patch the result. Escape a real one with \| \{ \}. Use \s for a space. Timeout: 60 sec""",
     "THUMBNAIL_LAYOUT": "Send thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...). Example: 3x3. Timeout: 60 sec",
     "RCLONE_PATH": "Send Rclone Path. If you want to use your rclone config edit using owner/user config from usetting or add mt: before rclone path. Example mt:remote:folder. Timeout: 60 sec",
     "RCLONE_FLAGS": "key:value|key|key|key:value . Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>\nEx: --buffer-size:8M|--drive-starred-only",

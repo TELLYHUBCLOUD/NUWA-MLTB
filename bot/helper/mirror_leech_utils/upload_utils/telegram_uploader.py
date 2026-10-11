@@ -29,9 +29,12 @@ from .... import intervals
 from ....core.config_manager import Config
 from ....core.telegram_manager import TgClient
 from ...ext_utils.bot_utils import sync_to_async
+from ...ext_utils.caption_utils import render
 from ...ext_utils.files_utils import is_archive, get_base_name
+from ...ext_utils.status_utils import get_readable_file_size, get_readable_time
 from ...telegram_helper.message_utils import delete_message
 from ...ext_utils.media_utils import (
+    get_md5_hash,
     get_media_info,
     get_document_type,
     get_video_thumbnail,
@@ -57,6 +60,7 @@ class TelegramUploader:
         self._last_msg_in_group = False
         self._up_path = ""
         self._lprefix = ""
+        self._lcaption = ""
         self._media_group = False
         self._is_private = False
         self._sent_msg = None
@@ -85,6 +89,11 @@ class TelegramUploader:
             Config.LEECH_FILENAME_PREFIX
             if "LEECH_FILENAME_PREFIX" not in self._listener.user_dict
             else ""
+        )
+        self._lcaption = (
+            self._listener.user_dict.get("LEECH_CAPTION")
+            or self._listener.user_dict.get("LEECH_CAPTIONS")
+            or ""
         )
         if self._thumb != "none" and not await aiopath.exists(self._thumb):
             self._thumb = None
@@ -165,6 +174,25 @@ class TelegramUploader:
             await rename(self._up_path, new_path)
             self._up_path = new_path
         return cap_mono
+
+    async def leech_caption(self, template, size):
+        template = str(template)
+        duration, quality, languages, subtitles = await get_media_info(
+            self._up_path, True
+        )
+        values = {
+            "filename": ospath.basename(self._up_path),
+            "size": get_readable_file_size(size),
+            "duration": get_readable_time(duration),
+            "quality": quality,
+            "languages": languages,
+            "subtitles": subtitles,
+            "md5_hash": await sync_to_async(get_md5_hash, self._up_path),
+            "mime_type": self._listener.file_details.get("mime_type", "text/plain"),
+            "prefilename": self._listener.file_details.get("filename", ""),
+            "precaption": self._listener.file_details.get("caption", "") or "",
+        }
+        return render(template, values)
 
     def _get_input_media(self, subkey, key):
         rlist = []
@@ -256,6 +284,10 @@ class TelegramUploader:
                     if self._listener.is_cancelled:
                         return
                     cap_mono = await self._prepare_file(file_, dirpath)
+                    if self._lcaption:
+                        cap_mono = await self.leech_caption(
+                            self._lcaption, f_size
+                        )
                     if self._last_msg_in_group:
                         group_lists = [
                             x for v in self._media_dict.values() for x in v.keys()
