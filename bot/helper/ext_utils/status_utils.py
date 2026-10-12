@@ -198,7 +198,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             and task.listener.progress
         ):
             progress = task.progress()
-            msg += f"<br>{get_progress_bar_string(progress)} {progress}"
+            msg += f"<br>{get_progress_bar_string(progress)} » {progress}"
             if task.listener.subname:
                 subsize = f"/{get_readable_file_size(task.listener.subsize)}"
                 ac = len(task.listener.files_to_proceed)
