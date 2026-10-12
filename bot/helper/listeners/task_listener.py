@@ -382,7 +382,14 @@ class TaskListener(TaskConfig):
         return
 
     async def on_upload_complete(
-        self, link, files, folders, mime_type, rclone_path="", dir_id=""
+        self,
+        link,
+        files,
+        folders,
+        mime_type,
+        rclone_path="",
+        dir_id="",
+        skipped=None,
     ):
         if (
             self.is_super_chat
@@ -396,6 +403,19 @@ class TaskListener(TaskConfig):
             msg += f"\n<b>Total Files: </b>{folders}"
             if mime_type != 0:
                 msg += f"\n<b>Corrupted Files: </b>{mime_type}"
+            if skipped:
+                msg += (
+                    f"\n<b>Skipped Files: </b>{len(skipped)} "
+                    f"(smaller than {Config.MIN_LEECH_UPLOAD_SIZE} MB, not uploaded)"
+                )
+                smsg = ""
+                for index, (name, size) in enumerate(skipped):
+                    line = f"\n- <code>{escape(name)}</code> ({get_readable_file_size(size)})"
+                    if len(smsg) + len(line) > 1500:
+                        smsg += f"\n- ... and {len(skipped) - index} more"
+                        break
+                    smsg += line
+                msg += smsg
             msg += f"\n<b>cc: </b>{self.tag}\n\n"
             if not files:
                 await send_message(self.message, msg)
