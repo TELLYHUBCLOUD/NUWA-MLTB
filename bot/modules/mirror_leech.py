@@ -54,7 +54,11 @@ from ..helper.mirror_leech_utils.download_utils.rclone_download import (
 from ..helper.mirror_leech_utils.download_utils.telegram_download import (
     TelegramDownloadHelper,
 )
-from ..helper.telegram_helper.message_utils import send_message, get_tg_link_message
+from ..helper.telegram_helper.message_utils import (
+    delete_links,
+    send_message,
+    get_tg_link_message,
+)
 
 
 class Mirror(TaskListener):
@@ -126,9 +130,17 @@ class Mirror(TaskListener):
             "-ns": "",
             "-tl": "",
             "-ff": set(),
+            "-meta": "",
         }
 
         arg_parser(input_list[1:], args)
+        try:
+            self.set_metadata(args["-meta"])
+        except ValueError as error:
+            await send_message(self.message, f"Invalid metadata format: {error}")
+            await self.remove_from_same_dir()
+            await delete_links(self.message)
+            return
 
         self.select = args["-s"]
         self.seed = args["-d"]
@@ -242,6 +254,7 @@ class Mirror(TaskListener):
             except Exception as e:
                 await send_message(self.message, f"ERROR: {e}")
                 await self.remove_from_same_dir()
+                await delete_links(self.message)
                 return
 
         if isinstance(reply_to, list):
@@ -311,6 +324,7 @@ class Mirror(TaskListener):
                 self.message, COMMAND_USAGE["mirror"][0], COMMAND_USAGE["mirror"][1]
             )
             await self.remove_from_same_dir()
+            await delete_links(self.message)
             return
 
         if len(self.link) > 0:
@@ -321,6 +335,7 @@ class Mirror(TaskListener):
         except Exception as e:
             await send_message(self.message, e)
             await self.remove_from_same_dir()
+            await delete_links(self.message)
             return
 
         if self.is_torbox:
@@ -355,10 +370,12 @@ class Mirror(TaskListener):
                 if msg.startswith("ERROR:"):
                     await send_message(self.message, msg)
                 await self.remove_from_same_dir()
+                await delete_links(self.message)
                 return
             except Exception as e:
                 await send_message(self.message, e)
                 await self.remove_from_same_dir()
+                await delete_links(self.message)
                 return
 
         if self.is_alldebrid and (
@@ -386,11 +403,13 @@ class Mirror(TaskListener):
                 if msg.startswith("ERROR:"):
                     await send_message(self.message, msg)
                     await self.remove_from_same_dir()
+                    await delete_links(self.message)
                     return
                 resolved = None
             except Exception as e:
                 await send_message(self.message, e)
                 await self.remove_from_same_dir()
+                await delete_links(self.message)
                 return
             if isinstance(resolved, dict):
                 self._alldebrid_magnet_id = resolved.get("magnet_id", 0)
@@ -425,10 +444,12 @@ class Mirror(TaskListener):
                     if msg.startswith("ERROR:"):
                         await send_message(self.message, msg)
                     await self.remove_from_same_dir()
+                    await delete_links(self.message)
                     return
                 except Exception as e:
                     await send_message(self.message, e)
                     await self.remove_from_same_dir()
+                    await delete_links(self.message)
                     return
 
             if self.is_alldebrid:
@@ -445,10 +466,12 @@ class Mirror(TaskListener):
                     if msg.startswith("ERROR:"):
                         await send_message(self.message, msg)
                         await self.remove_from_same_dir()
+                        await delete_links(self.message)
                         return
                 except Exception as e:
                     await send_message(self.message, e)
                     await self.remove_from_same_dir()
+                    await delete_links(self.message)
                     return
 
             if isinstance(self.link, str):
@@ -471,10 +494,12 @@ class Mirror(TaskListener):
                         if e.startswith("ERROR:"):
                             await send_message(self.message, e)
                             await self.remove_from_same_dir()
+                            await delete_links(self.message)
                             return
                     except Exception as e:
                         await send_message(self.message, e)
                         await self.remove_from_same_dir()
+                        await delete_links(self.message)
                         return
 
         if file_ is not None:

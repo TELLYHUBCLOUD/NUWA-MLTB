@@ -65,3 +65,13 @@ def test_unknown_flag_left_alone(arg_parser):
     args = {"-ad": False, "link": ""}
     arg_parser(["http://x", "-unknown"], args)
     assert args["-ad"] is False
+
+
+def test_meta_flag_preserves_link_and_pipe_delimited_value(arg_parser):
+    args = {"-meta": "", "link": ""}
+    arg_parser(
+        ["https://example.com/movie", "-meta", "title={basename}|date={year}"],
+        args,
+    )
+    assert args["link"] == "https://example.com/movie"
+    assert args["-meta"] == "title={basename}|date={year}"

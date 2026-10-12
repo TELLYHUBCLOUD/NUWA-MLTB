@@ -57,6 +57,7 @@ from .ext_utils.media_utils import (
     FFMpeg,
     ffconcat_escape,
 )
+from .ext_utils.metadata_utils import MetadataProcessor
 from .telegram_helper.message_utils import (
     send_message,
     send_rich_message,
@@ -72,6 +73,24 @@ class TaskConfig:
         self.user = self.message.from_user or self.message.sender_chat
         self.user_id = self.user.id
         self.user_dict = user_data.get(self.user_id, {})
+        self.metadata_processor = MetadataProcessor()
+        for setting, attribute in (
+            ("METADATA", "default_metadata_dict"),
+            ("AUDIO_METADATA", "audio_metadata_dict"),
+            ("VIDEO_METADATA", "video_metadata_dict"),
+            ("SUBTITLE_METADATA", "subtitle_metadata_dict"),
+        ):
+            value = self.user_dict.get(setting, getattr(Config, setting, {}))
+            if isinstance(value, str):
+                try:
+                    value = MetadataProcessor.parse_string(value)
+                except ValueError as error:
+                    LOGGER.warning(f"Invalid {setting} configuration: {error}")
+                    value = {}
+            if not isinstance(value, dict):
+                value = {}
+            setattr(self, attribute, value.copy())
+        self.metadata_dict = self.default_metadata_dict.copy()
         self.file_details = {}
         self.clone_dump_chats = {}
         self.dir = f"{DOWNLOAD_DIR}{self.mid}"
@@ -145,6 +164,12 @@ class TaskConfig:
             "CHANNEL",
             "FORUM",
         ]
+
+    def set_metadata(self, command_metadata=""):
+        command_dict = MetadataProcessor.parse_string(command_metadata)
+        self.metadata_dict = MetadataProcessor.merge_dicts(
+            self.default_metadata_dict, command_dict
+        )
 
     def get_token_path(self, dest):
         if dest.startswith("mt:"):
@@ -718,7 +743,6 @@ class TaskConfig:
 
         if not self.files_to_proceed:
             return dl_path
-        self.file_details.setdefault("filename", ospath.basename(dl_path))
         t_path = dl_path
         sevenz = SevenZ(self)
         LOGGER.info(f"Extracting: {self.name}")

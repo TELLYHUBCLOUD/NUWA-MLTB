@@ -3,6 +3,7 @@ import re
 ESCAPED = {"|": "\ue000", "{": "\ue001", "}": "\ue002", "s": "\ue003"}
 RESTORED = {value: key for key, value in ESCAPED.items()}
 
+
 def split_template(template):
     parts = [""]
     index = 0

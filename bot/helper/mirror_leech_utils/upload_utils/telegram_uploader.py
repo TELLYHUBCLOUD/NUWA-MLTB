@@ -5,6 +5,7 @@ from logging import getLogger
 from natsort import natsorted
 from os import walk, path as ospath
 from time import time
+from mimetypes import guess_type
 from re import match as re_match, sub as re_sub
 from pyrogram.errors import FloodWait, RPCError, FloodPremiumWait, BadRequest
 from pyrogram.types import (
@@ -44,6 +45,9 @@ from ...ext_utils.media_utils import (
 
 LOGGER = getLogger(__name__)
 
+# Matches parts of a split file: name.001 / name.part001.ext
+SPLIT_PART_REGEX = r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)"
+
 
 class TelegramUploader:
     def __init__(self, listener, path):
@@ -56,6 +60,8 @@ class TelegramUploader:
         self._thumb = self._listener.thumb or f"thumbnails/{listener.user_id}.jpg"
         self._msgs_dict = {}
         self._corrupted = 0
+        self._skipped_files = []
+        self._min_upload_size = max(Config.MIN_LEECH_UPLOAD_SIZE, 0) * 1024 * 1024
         self._media_dict = {"videos": {}, "documents": {}}
         self._last_msg_in_group = False
         self._up_path = ""
@@ -93,7 +99,7 @@ class TelegramUploader:
         self._lcaption = (
             self._listener.user_dict.get("LEECH_CAPTION")
             or self._listener.user_dict.get("LEECH_CAPTIONS")
-            or ""
+            or Config.LEECH_CAPTION
         )
         if self._thumb != "none" and not await aiopath.exists(self._thumb):
             self._thumb = None
@@ -175,7 +181,7 @@ class TelegramUploader:
             self._up_path = new_path
         return cap_mono
 
-    async def leech_caption(self, template, size):
+    async def leech_caption(self, template, size, file_):
         template = str(template)
         duration, quality, languages, subtitles = await get_media_info(
             self._up_path, True
@@ -189,7 +195,7 @@ class TelegramUploader:
             "subtitles": subtitles,
             "md5_hash": await sync_to_async(get_md5_hash, self._up_path),
             "mime_type": self._listener.file_details.get("mime_type", "text/plain"),
-            "prefilename": self._listener.file_details.get("filename", ""),
+            "prefilename": self._listener.file_details.get("filename") or file_,
             "precaption": self._listener.file_details.get("caption", "") or "",
         }
         return render(template, values)
@@ -251,6 +257,27 @@ class TelegramUploader:
             await delete_message(self._base_msg)
             self._base_msg = None
 
+    async def _skip_small_file(self, file_, f_path, f_size):
+        # Only videos and documents are filtered. Photos, audio and parts of
+        # split files are always uploaded.
+        if (
+            not self._min_upload_size
+            or not f_size
+            or f_size >= self._min_upload_size
+            or re_match(SPLIT_PART_REGEX, f_path)
+        ):
+            return False
+        is_video, is_audio, is_image = await get_document_type(f_path)
+        if is_image or (is_audio and not is_video):
+            return False
+        LOGGER.info(
+            f"Skipping {f_path}: size {get_readable_file_size(f_size)} is less than "
+            f"MIN_LEECH_UPLOAD_SIZE ({get_readable_file_size(self._min_upload_size)})"
+        )
+        self._skipped_files.append((file_, f_size))
+        self._listener.size = max(self._listener.size - f_size, 0)
+        return True
+
     async def upload(self):
         await self._user_settings()
         res = await self._msg_to_reply()
@@ -274,6 +301,8 @@ class TelegramUploader:
                     continue
                 try:
                     f_size = await aiopath.getsize(self._up_path)
+                    if await self._skip_small_file(file_, f_path, f_size):
+                        continue
                     self._total_files += 1
                     if f_size == 0:
                         LOGGER.error(
@@ -286,13 +315,13 @@ class TelegramUploader:
                     cap_mono = await self._prepare_file(file_, dirpath)
                     if self._lcaption:
                         cap_mono = await self.leech_caption(
-                            self._lcaption, f_size
+                            self._lcaption, f_size, file_
                         )
                     if self._last_msg_in_group:
                         group_lists = [
                             x for v in self._media_dict.values() for x in v.keys()
                         ]
-                        match = re_match(r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", f_path)
+                        match = re_match(SPLIT_PART_REGEX, f_path)
                         if not match or match and match.group(0) not in group_lists:
                             for key, value in list(self._media_dict.items()):
                                 for subkey, msgs in list(value.items()):
@@ -371,19 +400,23 @@ class TelegramUploader:
             self._base_msg = None
         if self._listener.is_cancelled:
             return
-        if self._total_files == 0:
+        if self._total_files == 0 and not self._skipped_files:
             await self._listener.on_upload_error(
                 "No files to upload. In case you have filled EXCLUDED/INCLUDED EXTENSIONS, then check if all files have those extensions or not."
             )
             return
-        if self._total_files <= self._corrupted:
+        if self._total_files and self._total_files <= self._corrupted:
             await self._listener.on_upload_error(
                 f"Files Corrupted or unable to upload. {self._error or 'Check logs!'}"
             )
             return
         LOGGER.info(f"Leech Completed: {self._listener.name}")
         await self._listener.on_upload_complete(
-            None, self._msgs_dict, self._total_files, self._corrupted
+            None,
+            self._msgs_dict,
+            self._total_files,
+            self._corrupted,
+            skipped=self._skipped_files,
         )
         return
 

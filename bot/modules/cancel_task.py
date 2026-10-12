@@ -64,21 +64,37 @@ async def cancel(_, message):
 
 @new_task
 async def cancel_updates(_, query):
-    data = query.data.split()
+    data = (query.data or "").split()
     user_id = query.from_user.id
+
+    if len(data) < 2 or data[0] != "cancel":
+        await query.answer("Invalid or expired action!", show_alert=True)
+        return
+
+    action = data[1]
+    if action == "close":
+        await query.answer()
+        await delete_message(query.message)
+        return
+
+    if action not in {"canconf", "conf"} or len(data) < 3 or not data[2].strip():
+        await query.answer("Invalid or expired task action!", show_alert=True)
+        return
+
     gid = data[2]
     task = await get_task_by_gid(gid)
     if task is None:
-        msg = "Task already cancelled or finished!"
-        await query.answer(msg, show_alert=True)
+        await query.answer("Task already cancelled or finished!", show_alert=True)
         return
-    elif user_id != task.listener.user_id and not await CustomFilters.sudo("", query):
+
+    if user_id != task.listener.user_id and not await CustomFilters.sudo("", query):
         await query.answer("Not Yours!", show_alert=True)
         return
-    elif data[1] == "canconf":
+
+    if action == "canconf":
         await query.answer()
         button = ButtonMaker()
-        button.data_button("Yes", f"cancel conf {data[2]}", style="green")
+        button.data_button("Yes", f"cancel conf {gid}", style="green")
         button.data_button("No", "cancel close", style="red")
         cmd_msg = (
             await TgClient.bot.get_messages(query.message.chat.id, task.listener.mid)
@@ -91,6 +107,7 @@ async def cancel_updates(_, query):
         )
         await auto_delete_message(res)
         return
+
     await delete_message(query.message)
     await query.answer()
     obj = task.task()
@@ -138,6 +155,9 @@ def create_cancel_buttons(is_sudo, user_id=""):
         "ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERT} {user_id}"
     )
     buttons.data_button("FFmpeg", f"canall ms {MirrorStatus.STATUS_FFMPEG} {user_id}")
+    buttons.data_button(
+        "Metadata", f"canall ms {MirrorStatus.STATUS_METADATA} {user_id}"
+    )
     buttons.data_button("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED} {user_id}")
     buttons.data_button("All", f"canall ms All {user_id}")
     if is_sudo:

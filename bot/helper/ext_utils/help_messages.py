@@ -312,6 +312,21 @@ waits for TorBox to finish/cache it, then downloads each file from TorBox CDN li
 
 Requires <code>TORBOX_API_KEY</code> in bot configuration."""
 
+metadata_help = """<b>Metadata</b>: -meta
+/cmd link -meta title={basename}|date={year}
+Apply metadata to downloaded audio/video files before upload. Command values override matching bot/user defaults.
+
+Set defaults in User Settings → Metadata Settings:
+• Global: metadata for the file/container
+• Video Metadata: metadata for every video stream
+• Audio Metadata: metadata for each audio stream
+• Subtitle Metadata: metadata for each subtitle stream
+
+Available variables: {filename}, {basename}, {extension}, {audiolang}, {sublang}, {year}.
+For stream-specific settings, {audiolang} or {sublang} is resolved for that stream.
+Separate key/value pairs with |. Use \\| for a literal pipe in a value."""
+
+
 YT_HELP_DICT = {
     "main": yt,
     "New-Name": f"{new_name}\nNote: Don't add file extension",
@@ -334,6 +349,7 @@ YT_HELP_DICT = {
     "Thumb-Layout": thumbnail_layout,
     "Leech-Type": leech_as,
     "FFmpeg-Cmds": ffmpeg_cmds,
+    "Metadata": metadata_help,
 }
 
 GDL_HELP_DICT = {
@@ -389,6 +405,7 @@ MIRROR_HELP_DICT = {
     "FFmpeg-Cmds": ffmpeg_cmds,
     "AllDebrid": alldebrid_arg,
     "TorBox": torbox_arg,
+    "Metadata": metadata_help,
 }
 
 CLONE_HELP_DICT = {
@@ -431,6 +448,18 @@ PASSWORD_ERROR_MESSAGE = """
 """
 
 user_settings_text = {
+    "METADATA": """Send global metadata as key=value pairs separated by |.
+Example: title={basename}|date={year}|comment=Downloaded by the bot
+Variables: {filename}, {basename}, {extension}, {audiolang}, {sublang}, {year}. Escape a literal pipe as \\|.""",
+    "AUDIO_METADATA": """Send audio-stream metadata as key=value pairs separated by |.
+Example: title={basename} ({audiolang})|comment=Audio stream
+Variables: {filename}, {basename}, {extension}, {audiolang}, {sublang}, {year}. Escape a literal pipe as \\|.""",
+    "VIDEO_METADATA": """Send video-stream metadata as key=value pairs separated by |.
+Example: title={basename}|date={year}
+Variables: {filename}, {basename}, {extension}, {audiolang}, {sublang}, {year}. Escape a literal pipe as \\|.""",
+    "SUBTITLE_METADATA": """Send subtitle-stream metadata as key=value pairs separated by |.
+Example: title={basename} ({sublang})|language={sublang}
+Variables: {filename}, {basename}, {extension}, {audiolang}, {sublang}, {year}. Escape a literal pipe as \\|.""",
     "LEECH_SPLIT_SIZE": f"Send Leech split size in bytes or use gb or mb. Example: 40000000 or 2.5gb or 1000mb. IS_PREMIUM_USER: {TgClient.IS_PREMIUM_USER}. Timeout: 60 sec",
     "LEECH_DUMP_CHAT": """Send leech destination ID/USERNAME/PM.
 * b:id/@username/pm (b: means leech by bot) (id or username of the chat or write pm means private message so bot will send the files in private to you) when you should use b:(leech by bot)? When your default settings is leech by user and you want to leech by bot for specific task.

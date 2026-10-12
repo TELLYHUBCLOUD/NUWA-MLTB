@@ -50,6 +50,7 @@ from ..mirror_leech_utils.upload_utils.telegram_uploader import TelegramUploader
 from ..telegram_helper.button_build import ButtonMaker
 from ..telegram_helper.message_utils import (
     send_message,
+    delete_links,
     delete_status,
     update_status_message,
 )
@@ -263,6 +264,32 @@ class TaskListener(TaskConfig):
             self.size = await get_path_size(up_dir)
             self.clear()
 
+        if any(
+            (
+                self.metadata_dict,
+                self.audio_metadata_dict,
+                self.video_metadata_dict,
+                self.subtitle_metadata_dict,
+            )
+        ):
+            from ...modules.metadata import apply_metadata_title
+
+            up_path = await apply_metadata_title(
+                self,
+                up_path,
+                gid,
+                self.metadata_dict,
+                self.audio_metadata_dict,
+                self.video_metadata_dict,
+                self.subtitle_metadata_dict,
+            )
+            if self.is_cancelled:
+                return
+            self.is_file = await aiopath.isfile(up_path)
+            self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
+            self.size = await get_path_size(up_dir)
+            self.clear()
+
         if self.compress:
             up_path = await self.proceed_compress(
                 up_path,
@@ -355,7 +382,14 @@ class TaskListener(TaskConfig):
         return
 
     async def on_upload_complete(
-        self, link, files, folders, mime_type, rclone_path="", dir_id=""
+        self,
+        link,
+        files,
+        folders,
+        mime_type,
+        rclone_path="",
+        dir_id="",
+        skipped=None,
     ):
         if (
             self.is_super_chat
@@ -369,6 +403,19 @@ class TaskListener(TaskConfig):
             msg += f"\n<b>Total Files: </b>{folders}"
             if mime_type != 0:
                 msg += f"\n<b>Corrupted Files: </b>{mime_type}"
+            if skipped:
+                msg += (
+                    f"\n<b>Skipped Files: </b>{len(skipped)} "
+                    f"(smaller than {Config.MIN_LEECH_UPLOAD_SIZE} MB, not uploaded)"
+                )
+                smsg = ""
+                for index, (name, size) in enumerate(skipped):
+                    line = f"\n- <code>{escape(name)}</code> ({get_readable_file_size(size)})"
+                    if len(smsg) + len(line) > 1500:
+                        smsg += f"\n- ... and {len(skipped) - index} more"
+                        break
+                    smsg += line
+                msg += smsg
             msg += f"\n<b>cc: </b>{self.tag}\n\n"
             if not files:
                 await send_message(self.message, msg)
@@ -434,6 +481,7 @@ class TaskListener(TaskConfig):
                     non_queued_up.remove(self.mid)
             await start_from_queued()
             return
+        await delete_links(self.message)
         await clean_download(self.dir)
         async with task_dict_lock:
             if self.mid in task_dict:
@@ -490,6 +538,7 @@ class TaskListener(TaskConfig):
         self._torbox_web_id = 0
         msg = f"{self.tag} Download: {escape(str(error))}"
         await send_message(self.message, msg, button)
+        await delete_links(self.message)
         if count == 0:
             await self.clean()
         else:
@@ -528,6 +577,7 @@ class TaskListener(TaskConfig):
                 del task_dict[self.mid]
             count = len(task_dict)
         await send_message(self.message, f"{self.tag} {escape(str(error))}")
+        await delete_links(self.message)
         if count == 0:
             await self.clean()
         else:

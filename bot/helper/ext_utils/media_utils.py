@@ -156,6 +156,29 @@ async def get_media_info(path, extra_info=False):
     return (0, "", "", "") if extra_info else (0, None, None)
 
 
+async def get_streams(path):
+    result = await cmd_exec(
+        [
+            "ffprobe",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-print_format",
+            "json",
+            "-show_streams",
+            path,
+        ]
+    )
+    if result[2] != 0:
+        LOGGER.error(f"Error getting stream info for {path}: {result[1]}")
+        return None
+    try:
+        return loads(result[0]).get("streams", [])
+    except Exception as error:
+        LOGGER.error(f"Invalid ffprobe stream output for {path}: {error}")
+        return None
+
+
 async def get_document_type(path):
     is_video, is_audio, is_image = False, False, False
     if (

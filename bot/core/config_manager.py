@@ -22,6 +22,7 @@ class Config:
     DATABASE_URL = ""
     DATABASE_NAME = "mltb"
     DEFAULT_UPLOAD = "rc"
+    DELETE_LINKS = False
     EQUAL_SPLITS = False
     EXCLUDED_EXTENSIONS = ""
     INCLUDED_EXTENSIONS = ""
@@ -36,8 +37,14 @@ class Config:
     JD_EMAIL = ""
     JD_PASS = ""
     LEECH_DUMP_CHAT = ""
+    LEECH_CAPTION = ""
     LEECH_FILENAME_PREFIX = ""
     LEECH_SPLIT_SIZE = 2097152000
+    MIN_LEECH_UPLOAD_SIZE = 0
+    METADATA = {}
+    AUDIO_METADATA = {}
+    VIDEO_METADATA = {}
+    SUBTITLE_METADATA = {}
     MEDIA_GROUP = False
     HYBRID_LEECH = False
     HYDRA_IP = ""
@@ -143,6 +150,8 @@ class Config:
             converted_value = converted_value.strip()
         if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf"}:
             return "rc"
+        if attr == "MIN_LEECH_UPLOAD_SIZE":
+            return max(int(converted_value), 0)
         if attr in {
             "BASE_URL",
             "RCLONE_SERVE_URL",
