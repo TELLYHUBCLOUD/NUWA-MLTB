@@ -40,6 +40,7 @@ class Config:
     LEECH_CAPTION = ""
     LEECH_FILENAME_PREFIX = ""
     LEECH_SPLIT_SIZE = 2097152000
+    MIN_LEECH_UPLOAD_SIZE = 0
     METADATA = {}
     AUDIO_METADATA = {}
     VIDEO_METADATA = {}
@@ -149,6 +150,8 @@ class Config:
             converted_value = converted_value.strip()
         if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf"}:
             return "rc"
+        if attr == "MIN_LEECH_UPLOAD_SIZE":
+            return max(int(converted_value), 0)
         if attr in {
             "BASE_URL",
             "RCLONE_SERVE_URL",

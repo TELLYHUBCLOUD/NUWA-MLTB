@@ -1,5 +1,5 @@
 from asyncio import sleep
-from pyrogram.errors import FloodWait, FloodPremiumWait
+from pyrogram.errors import FloodWait, FloodPremiumWait, MessageNotModified
 from re import match as re_match
 from time import time
 
@@ -60,6 +60,8 @@ async def edit_message(message, text=None, buttons=None, block=True, rich_messag
             return str(f)
         await sleep(f.value * 1.2)
         return await edit_message(message, text, buttons, block, rich_message)
+    except MessageNotModified:
+        return message
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
