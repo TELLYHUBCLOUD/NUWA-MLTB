@@ -96,4 +96,7 @@ __all__ = [
     "gallery_dl",
     "gallery_dl_leech",
     "speedtest",
+    "ban_user",
+    "unban_user",
+    "list_banned",
 ]
