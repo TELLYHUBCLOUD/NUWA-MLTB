@@ -155,10 +155,18 @@ async def select_callback(query):
     await query.answer()
     SBUTTONS = bt_selection_buttons(id_)
     msg = "Your download paused. Choose files then press Done Selecting button to resume downloading."
-    cmd_msg = (
-        await TgClient.bot.get_messages(query.message.chat.id, task.listener.mid)
-        or query.message
-    )
+    cmd_msg = None
+    chat_id = getattr(getattr(query, "message", None), "chat", None)
+    chat_id = getattr(chat_id, "id", None)
+    if chat_id and getattr(task.listener, "mid", None):
+        try:
+            cmd_msg = await TgClient.bot.get_messages(
+                chat_id, task.listener.mid
+            )
+        except Exception:
+            pass
+    if not cmd_msg or getattr(cmd_msg, "empty", False) or not getattr(cmd_msg, "chat", None):
+        cmd_msg = query.message
     await send_message(cmd_msg, msg, SBUTTONS)
 
 

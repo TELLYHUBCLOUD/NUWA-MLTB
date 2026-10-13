@@ -60,6 +60,11 @@ class TaskListener(TaskConfig):
     def __init__(self):
         super().__init__()
 
+    @property
+    def chat_id(self):
+        chat = getattr(getattr(self, "message", None), "chat", None)
+        return getattr(chat, "id", None) or getattr(self, "user_id", None)
+
     async def clean(self):
         try:
             if st := intervals["status"]:
@@ -92,9 +97,10 @@ class TaskListener(TaskConfig):
             self.is_super_chat
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
+            and self.chat_id
         ):
             await database.add_incomplete_task(
-                self.message.chat.id, self.message.link, self.tag
+                self.chat_id, getattr(self.message, "link", ""), self.tag
             )
 
     async def on_download_complete(self):
@@ -335,7 +341,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = TelegramStatus(self, tg, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.chat_id),
                 tg.upload(),
             )
             del tg
@@ -345,7 +351,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = BuzzHeavierStatus(self, bh, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.chat_id),
                 bh.upload(),
             )
             del bh
@@ -355,7 +361,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = GoFileStatus(self, gf, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.chat_id),
                 gf.upload(),
             )
             del gf
@@ -365,7 +371,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = GoogleDriveStatus(self, drive, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.chat_id),
                 sync_to_async(drive.upload),
             )
             del drive
@@ -375,7 +381,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = RcloneStatus(self, RCTransfer, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.chat_id),
                 RCTransfer.upload(up_path),
             )
             del RCTransfer
@@ -489,8 +495,8 @@ class TaskListener(TaskConfig):
             count = len(task_dict)
         if count == 0:
             await self.clean()
-        else:
-            await update_status_message(self.message.chat.id)
+        elif self.chat_id:
+            await update_status_message(self.chat_id)
 
         async with queue_dict_lock:
             if self.mid in non_queued_up:
@@ -541,13 +547,14 @@ class TaskListener(TaskConfig):
         await delete_links(self.message)
         if count == 0:
             await self.clean()
-        else:
-            await update_status_message(self.message.chat.id)
+        elif self.chat_id:
+            await update_status_message(self.chat_id)
 
         if (
             self.is_super_chat
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
+            and getattr(self.message, "link", None)
         ):
             await database.rm_complete_task(self.message.link)
 
@@ -580,13 +587,14 @@ class TaskListener(TaskConfig):
         await delete_links(self.message)
         if count == 0:
             await self.clean()
-        else:
-            await update_status_message(self.message.chat.id)
+        elif self.chat_id:
+            await update_status_message(self.chat_id)
 
         if (
             self.is_super_chat
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
+            and getattr(self.message, "link", None)
         ):
             await database.rm_complete_task(self.message.link)
 

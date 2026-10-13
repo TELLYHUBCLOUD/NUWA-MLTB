@@ -12,6 +12,8 @@ from ..ext_utils.status_utils import get_readable_message
 
 
 async def send_message(message, text, buttons=None, block=True):
+    if not message or isinstance(message, str) or getattr(message, "empty", False) or not getattr(message, "chat", None):
+        return ""
     try:
         return await message.reply(
             text=text,
@@ -30,6 +32,8 @@ async def send_message(message, text, buttons=None, block=True):
 
 
 async def send_rich_message(message, rich_input, buttons=None, block=True):
+    if not message or isinstance(message, str) or getattr(message, "empty", False) or not getattr(message, "chat", None):
+        return ""
     try:
         return await message.reply_rich(
             rich_message=rich_input,
@@ -48,6 +52,8 @@ async def send_rich_message(message, rich_input, buttons=None, block=True):
 
 
 async def edit_message(message, text=None, buttons=None, block=True, rich_message=None):
+    if not message or isinstance(message, str) or getattr(message, "empty", False) or not getattr(message, "chat", None):
+        return ""
     try:
         return await message.edit(
             text=text,
@@ -68,6 +74,8 @@ async def edit_message(message, text=None, buttons=None, block=True, rich_messag
 
 
 async def send_file(message, file, caption=""):
+    if not message or isinstance(message, str) or getattr(message, "empty", False) or not getattr(message, "chat", None):
+        return ""
     try:
         return await message.reply_document(
             document=file, caption=caption, disable_notification=True
@@ -99,7 +107,7 @@ async def send_rss(text, chat_id, thread_id):
 
 
 async def delete_message(message):
-    if message is None or isinstance(message, str):
+    if not message or isinstance(message, str) or getattr(message, "empty", False) or not getattr(message, "chat", None):
         return
     try:
         await message.delete()
@@ -107,11 +115,10 @@ async def delete_message(message):
         LOGGER.error(str(e))
 
 
-
 async def delete_links(message):
-    if Config.DELETE_LINKS:
+    if Config.DELETE_LINKS and message:
         await delete_message(message)
-        if message.reply_to_message:
+        if getattr(message, "reply_to_message", None):
             await delete_message(message.reply_to_message)
 
 
