@@ -20,3 +20,21 @@ class TgLinkException(Exception):
     """No Access granted for this chat"""
 
     pass
+
+
+class InvalidConfigError(Exception):
+    """Raised when a configuration value is invalid or missing."""
+
+    pass
+
+
+class UploadFailedException(Exception):
+    """Raised when an upload operation fails after retries."""
+
+    pass
+
+
+class RateLimitExceededException(Exception):
+    """Raised when a user exceeds the rate limit for bot commands."""
+
+    pass

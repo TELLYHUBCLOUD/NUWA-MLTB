@@ -1,3 +1,4 @@
+from ast import literal_eval as _literal_eval
 from aiofiles.os import remove, path as aiopath, makedirs
 from asyncio import sleep
 from functools import partial
@@ -431,6 +432,11 @@ Buzzheavier Folder ID: {bh_fol}"""
         )
         buttons.data_button("Metadata Settings", f"userset {user_id} metadata")
 
+        # Language setting
+        from ..helper.ext_utils.localization import SUPPORTED_LANGUAGES
+        user_lang = user_dict.get("USER_LANGUAGE", "") or Config.BOT_LANGUAGE
+        buttons.data_button("Language", f"userset {user_id} menu USER_LANGUAGE")
+
         if user_dict:
             buttons.data_button("Reset All", f"userset {user_id} reset all")
 
@@ -453,7 +459,9 @@ Gallery-DL Options is <code>{gdlopt}</code>
 
 FFMPEG Commands is <b>{ffc}</b>
 
-METADATA Settings is <b>{metadata_status}</b>"""
+METADATA Settings is <b>{metadata_status}</b>
+
+Language is <b>{user_lang}</b>"""
 
     return text, buttons.build_menu(2)
 
@@ -501,7 +509,7 @@ async def add_one(_, message, option):
     value = message.text
     if value.startswith("{") and value.endswith("}"):
         try:
-            value = eval(value)
+            value = _literal_eval(value)
             if user_dict[option]:
                 user_dict[option].update(value)
             else:
@@ -538,6 +546,16 @@ async def set_option(_, message, option):
         if not value.isdigit():
             value = get_size_bytes(value)
         value = min(int(value), TgClient.MAX_SPLIT_SIZE)
+    elif option == "USER_LANGUAGE":
+        from ..helper.ext_utils.localization import SUPPORTED_LANGUAGES
+        value = value.strip().lower()
+        if value not in SUPPORTED_LANGUAGES:
+            await send_message(
+                message,
+                f"❌ Unsupported language: <code>{value}</code>\n"
+                f"Available: {', '.join(SUPPORTED_LANGUAGES)}",
+            )
+            return
     elif option == "EXCLUDED_EXTENSIONS":
         fx = value.split()
         value = ["aria2", "!qB"]
@@ -566,7 +584,7 @@ async def set_option(_, message, option):
     ]:
         if value.startswith("{") and value.endswith("}"):
             try:
-                value = eval(value)
+                value = _literal_eval(value)
             except Exception as e:
                 await send_message(message, str(e))
                 return

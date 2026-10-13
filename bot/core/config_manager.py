@@ -21,6 +21,8 @@ class Config:
     CLONE_DUMP_CHATS = ""
     DATABASE_URL = ""
     DATABASE_NAME = "mltb"
+    DEDUP_ENABLED = False
+    BOT_LANGUAGE = "en"
     DEFAULT_UPLOAD = "rc"
     DELETE_LINKS = False
     DISABLE_SEED = False
@@ -55,6 +57,8 @@ class Config:
     QUEUE_ALL = 0
     QUEUE_DOWNLOAD = 0
     QUEUE_UPLOAD = 0
+    BOT_TASK_LIMIT = 0
+    USER_TASK_LIMIT = 0
     RCLONE_FLAGS = ""
     RCLONE_PATH = ""
     RCLONE_SERVE_URL = ""
@@ -86,6 +90,9 @@ class Config:
     USE_SERVICE_ACCOUNTS = False
     WEB_PINCODE = False
     YT_DLP_OPTIONS = {}
+    # Rate limiting (0 = disabled)
+    RATE_LIMIT_PER_MIN = 0
+    RATE_LIMIT_WINDOW = 60
 
     @classmethod
     def _convert(cls, key, value):
@@ -149,7 +156,7 @@ class Config:
         converted_value = cls._convert(attr, value)
         if isinstance(converted_value, str):
             converted_value = converted_value.strip()
-        if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf"}:
+        if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf", "rc"}:
             return "rc"
         if attr == "MIN_LEECH_UPLOAD_SIZE":
             return max(int(converted_value), 0)

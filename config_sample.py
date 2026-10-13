@@ -111,6 +111,13 @@ WEB_PINCODE = False
 QUEUE_ALL = 0
 QUEUE_DOWNLOAD = 0
 QUEUE_UPLOAD = 0
+# Task limits (0 = disabled)
+BOT_TASK_LIMIT = 0  # Max total concurrent tasks for the entire bot
+USER_TASK_LIMIT = 0  # Max concurrent tasks per user
+# File deduplication (skip downloading files already downloaded recently)
+DEDUP_ENABLED = False
+# Bot language (en, hi, ar, id, tr, pt, bn)
+BOT_LANGUAGE = "en"
 # RSS
 RSS_DELAY = 600
 RSS_CHAT = ""
@@ -118,6 +125,10 @@ RSS_SIZE_LIMIT = 0
 # Torrent Search
 SEARCH_API_LINK = ""
 SEARCH_LIMIT = 0
+# Rate Limiting (commands per user per window, 0 = disabled)
+RATE_LIMIT_PER_MIN = 0
+RATE_LIMIT_WINDOW = 60
+
 SEARCH_PLUGINS = [
     "https://raw.githubusercontent.com/qbittorrent/search-plugins/master/nova3/engines/piratebay.py",
     "https://raw.githubusercontent.com/qbittorrent/search-plugins/master/nova3/engines/limetorrents.py",

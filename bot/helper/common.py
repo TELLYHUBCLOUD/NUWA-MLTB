@@ -1,3 +1,4 @@
+from ast import literal_eval as _literal_eval
 from aiofiles.os import path as aiopath, remove, makedirs, listdir
 from aiofiles import open as aiopen
 from asyncio import sleep, gather
@@ -131,8 +132,6 @@ class TaskConfig:
         self.compress = False
         self.select = False
         self.seed = False
-        self.compress = False
-        self.extract = False
         self.join = False
         self.private_link = False
         self.stop_duplicate = False
@@ -582,7 +581,7 @@ class TaskConfig:
                     if self.clone_dump_chats.startswith(
                         "["
                     ) and self.clone_dump_chats.endswith("]"):
-                        self.clone_dump_chats = eval(self.clone_dump_chats)
+                        self.clone_dump_chats = _literal_eval(self.clone_dump_chats)
                     else:
                         self.clone_dump_chats = [self.clone_dump_chats]
                 temp_dict = {}

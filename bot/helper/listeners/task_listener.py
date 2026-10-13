@@ -36,6 +36,7 @@ from ..ext_utils.files_utils import (
 from ..ext_utils.links_utils import is_gdrive_id
 from ..ext_utils.status_utils import get_readable_file_size
 from ..ext_utils.task_manager import start_from_queued, check_running_tasks
+from ..ext_utils.dedup import register_download
 from ..mirror_leech_utils.gdrive_utils.upload import GoogleDriveUpload
 from ..mirror_leech_utils.rclone_utils.transfer import RcloneTransferHelper
 from ..mirror_leech_utils.upload_utils.buzzheavier_uploader import BuzzHeavierUploader
@@ -175,6 +176,15 @@ class TaskListener(TaskConfig):
         dl_path = f"{self.dir}/{self.name}"
         self.size = await get_path_size(dl_path)
         self.is_file = await aiopath.isfile(dl_path)
+
+        # Register in dedup cache
+        await register_download(
+            name=self.name,
+            size=self.size,
+            url=getattr(self, "link", "") if isinstance(getattr(self, "link", ""), str) else "",
+            user_id=self.user_id,
+            path=dl_path,
+        )
 
         if self.seed:
             up_dir = self.up_dir = f"{self.dir}10000"
