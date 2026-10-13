@@ -509,6 +509,7 @@ Format: {key: value, key: value, key: value}.
 Example: {"cookies": "cookies.txt", "proxy": "http://proxy:8080", "image-range": "1-50", "extractor": {"pixiv": {"username": "user", "password": "pass"}}}
 Check gallery-dl configuration options from this <a href='https://github.com/mikf/gallery-dl/blob/master/docs/configuration.rst'>FILE</a>.""",
     "CLONE_DUMP_CHATS": "Send List/Int/Str Chat_id/username|thread_id. Example: -100xxxx555|5 or @dumpchat|8 or @mltb_dump or pm or List like: [-100xxx885552|6, '@username', 65585541254, 'pm']",
+    "USER_LANGUAGE": "Send language code. Available: en (English), hi (Hindi), ar (Arabic), id (Indonesian), tr (Turkish), pt (Portuguese), bn (Bengali). Example: hi\nTimeout: 60 sec",
 }
 
 

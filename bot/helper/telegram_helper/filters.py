@@ -15,11 +15,16 @@ class CustomFilters:
 
     async def authorized_user(self, _, update):
         if Config.PUBLIC_MODE:
-            return True        
+            return True
         user = update.from_user or getattr(update, "sender_chat", None)
         if not user:
             return False
         uid = user.id
+        # Check ban status (owner is never banned)
+        if uid != Config.OWNER_ID:
+            udata = user_data.get(uid, {})
+            if udata.get("BANNED", False):
+                return False
         chat = getattr(update, "chat", None) or getattr(getattr(update, "message", None), "chat", None)
         chat_id = chat.id if chat else None
         thread_id = getattr(update, "message_thread_id", None) if getattr(update, "topic_message", False) else None

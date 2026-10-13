@@ -35,6 +35,7 @@ from .users_settings import get_users_settings, edit_user_settings, send_user_se
 from .ytdlp import ytdl, ytdl_leech
 from .gallery_dl import gallery_dl, gallery_dl_leech
 from .speedtest import speedtest
+from .ban_manager import ban_user, unban_user, list_banned
 
 __all__ = [
     "send_bot_settings",

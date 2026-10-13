@@ -3,6 +3,7 @@ from aiofiles.os import path as aiopath
 from os import path as ospath
 from base64 import b64encode
 from re import match as re_match
+from time import time
 
 from .. import LOGGER, bot_loop, task_dict_lock, DOWNLOAD_DIR
 from ..core.config_manager import Config
@@ -60,6 +61,8 @@ from ..helper.telegram_helper.message_utils import (
     send_message,
     get_tg_link_message,
 )
+from ..helper.ext_utils.dedup import check_duplicate
+from ..helper.ext_utils.task_manager import check_bot_task_limit, check_user_task_limit
 
 
 class Mirror(TaskListener):
@@ -511,6 +514,57 @@ class Mirror(TaskListener):
                         await self.remove_from_same_dir()
                         await delete_links(self.message)
                         return
+
+        # --- Task Limit Checks ---
+        if not self.force_run and not self.force_download:
+            bot_over, bot_limit = await check_bot_task_limit()
+            if bot_over:
+                await send_message(
+                    self.message,
+                    f"⚠️ Bot task limit reached (<b>{bot_limit}</b>). "
+                    f"Please wait for a task to finish.",
+                )
+                await self.remove_from_same_dir()
+                await delete_links(self.message)
+                return
+
+            user_over, user_limit = await check_user_task_limit(self.user_id)
+            if user_over:
+                await send_message(
+                    self.message,
+                    f"⚠️ Your task limit reached (<b>{user_limit}</b>). "
+                    f"Please wait for your current tasks to finish.",
+                )
+                await self.remove_from_same_dir()
+                await delete_links(self.message)
+                return
+
+        # --- File Deduplication Check ---
+        if (
+            isinstance(self.link, str)
+            and self.link
+            and not file_
+            and not self.is_clone
+        ):
+            dup = await check_duplicate(
+                name=ospath.basename(self.link) if ospath.exists(str(self.link)) else "",
+                size=0,
+                url=self.link,
+                user_id=self.user_id,
+            )
+            if dup:
+                dup_time = int(time() - dup["timestamp"])
+                dup_age = f"{dup_time // 3600}h {(dup_time % 3600) // 60}m"
+                await send_message(
+                    self.message,
+                    f"⚠️ <b>Duplicate detected!</b>\n\n"
+                    f"This link was already downloaded {dup_age} ago.\n"
+                    f"Path: <code>{dup['path']}</code>\n\n"
+                    f"Use <code>-nd</code> flag to force download anyway.",
+                )
+                await self.remove_from_same_dir()
+                await delete_links(self.message)
+                return
 
         if file_ is not None:
             await TelegramDownloadHelper(self).add_download(

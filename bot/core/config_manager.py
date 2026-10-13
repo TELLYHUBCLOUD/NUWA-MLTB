@@ -21,6 +21,8 @@ class Config:
     CLONE_DUMP_CHATS = ""
     DATABASE_URL = ""
     DATABASE_NAME = "mltb"
+    DEDUP_ENABLED = False
+    BOT_LANGUAGE = "en"
     DEFAULT_UPLOAD = "rc"
     DELETE_LINKS = False
     DISABLE_SEED = False
@@ -55,6 +57,8 @@ class Config:
     QUEUE_ALL = 0
     QUEUE_DOWNLOAD = 0
     QUEUE_UPLOAD = 0
+    BOT_TASK_LIMIT = 0
+    USER_TASK_LIMIT = 0
     RCLONE_FLAGS = ""
     RCLONE_PATH = ""
     RCLONE_SERVE_URL = ""

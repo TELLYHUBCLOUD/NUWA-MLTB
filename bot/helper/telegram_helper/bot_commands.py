@@ -46,3 +46,6 @@ class BotCommands:
     NzbSearchCommand = f"nzbsearch{i}"
     SpeedtestCommand = f"speedtest{i}"
     AnalyticsCommand = [f"analytics{i}", f"an{i}"]
+    BanCommand = f"ban{i}"
+    UnbanCommand = f"unban{i}"
+    BanListCommand = f"banlist{i}"

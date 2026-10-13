@@ -355,3 +355,24 @@ def add_handlers():
             & CustomFilters.owner,
         )
     )
+    TgClient.bot.add_handler(
+        MessageHandler(
+            ban_user,
+            filters=command(BotCommands.BanCommand, case_sensitive=True)
+            & CustomFilters.sudo,
+        )
+    )
+    TgClient.bot.add_handler(
+        MessageHandler(
+            unban_user,
+            filters=command(BotCommands.UnbanCommand, case_sensitive=True)
+            & CustomFilters.sudo,
+        )
+    )
+    TgClient.bot.add_handler(
+        MessageHandler(
+            list_banned,
+            filters=command(BotCommands.BanListCommand, case_sensitive=True)
+            & CustomFilters.sudo,
+        )
+    )
