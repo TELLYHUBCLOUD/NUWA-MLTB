@@ -304,9 +304,9 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
     start_position = (page_no - 1) * STATUS_LIMIT
 
     if pages > 1:
-        msg = f"<h3>Tasks: {tasks_no}/{STATUS_LIMIT} | Page: {page_no}/{pages}</h3>"
+        msg = f"<h3>Tasks: {tasks_no} | Page: {page_no}/{pages}</h3>"
     else:
-        msg = f"<h3>Tasks: {tasks_no}/{STATUS_LIMIT}</h3>"
+        msg = f"<h3>Tasks: {tasks_no}</h3>"
 
     for index, task in enumerate(
         tasks[start_position : STATUS_LIMIT + start_position], start=1
@@ -324,8 +324,8 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             and getattr(task.listener.message, "link", None)
             else ""
         )
+        msg += "<hr>"
         if link:
-            msg += "<hr>"
             msg += f"<b>{index + start_position}. <a href='{link}'>{tstatus}</a></b>"
         else:
             msg += f"<b>{index + start_position}. {tstatus}</b>"
