@@ -816,7 +816,7 @@ async def edit_user_settings(client, query):
                 fpath = token_pickle
             if await aiopath.exists(fpath):
                 await remove(fpath)
-            del user_dict[data[3]]
+            user_dict.pop(data[3], None)
             await database.update_user_doc(user_id, data[3])
         else:
             if data[3] in metadata_options:

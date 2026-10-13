@@ -99,10 +99,13 @@ async def send_rss(text, chat_id, thread_id):
 
 
 async def delete_message(message):
+    if message is None or isinstance(message, str):
+        return
     try:
         await message.delete()
     except Exception as e:
         LOGGER.error(str(e))
+
 
 
 async def delete_links(message):

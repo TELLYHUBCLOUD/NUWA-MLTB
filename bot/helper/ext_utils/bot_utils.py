@@ -119,8 +119,19 @@ def arg_parser(items, arg_base):
         "-tb",
     }
 
+    disabled_args = set()
+
+    if Config.DISABLE_SEED and "-d" in items:
+        arg_base["-d"] = False
+        disabled_args.add("-d")
+
     while i < total:
         part = items[i]
+
+        if part in disabled_args:
+            i += 1
+            continue
+
 
         if part in arg_base:
             if arg_start == -1:

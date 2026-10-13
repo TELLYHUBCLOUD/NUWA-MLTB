@@ -23,6 +23,7 @@ class Config:
     DATABASE_NAME = "mltb"
     DEFAULT_UPLOAD = "rc"
     DELETE_LINKS = False
+    DISABLE_SEED = False
     EQUAL_SPLITS = False
     EXCLUDED_EXTENSIONS = ""
     INCLUDED_EXTENSIONS = ""

@@ -5,6 +5,7 @@ from base64 import b64encode
 from re import match as re_match
 
 from .. import LOGGER, bot_loop, task_dict_lock, DOWNLOAD_DIR
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import (
     get_content_type,
     sync_to_async,
@@ -138,6 +139,15 @@ class Mirror(TaskListener):
             self.set_metadata(args["-meta"])
         except ValueError as error:
             await send_message(self.message, f"Invalid metadata format: {error}")
+            await self.remove_from_same_dir()
+            await delete_links(self.message)
+            return
+
+        if Config.DISABLE_SEED and args.get("-d", False):
+            await send_message(
+                self.message,
+                "Seeding is currently disabled. Please try without the -d flag.",
+            )
             await self.remove_from_same_dir()
             await delete_links(self.message)
             return
