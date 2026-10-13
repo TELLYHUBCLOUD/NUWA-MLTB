@@ -132,7 +132,7 @@ def time_to_seconds(time_duration):
         else:
             return 0
         return hours * 3600 + minutes * 60 + seconds
-    except:
+    except (ValueError, AttributeError, IndexError):
         return 0
 
 

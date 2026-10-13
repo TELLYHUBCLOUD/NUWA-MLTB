@@ -118,6 +118,10 @@ RSS_SIZE_LIMIT = 0
 # Torrent Search
 SEARCH_API_LINK = ""
 SEARCH_LIMIT = 0
+# Rate Limiting (commands per user per window, 0 = disabled)
+RATE_LIMIT_PER_MIN = 0
+RATE_LIMIT_WINDOW = 60
+
 SEARCH_PLUGINS = [
     "https://raw.githubusercontent.com/qbittorrent/search-plugins/master/nova3/engines/piratebay.py",
     "https://raw.githubusercontent.com/qbittorrent/search-plugins/master/nova3/engines/limetorrents.py",

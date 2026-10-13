@@ -29,7 +29,7 @@ from .search import torrent_search, torrent_search_update, initiate_search_tools
 from .nzb_search import hydra_search
 from .services import start, ping, log
 from .shell import run_shell
-from .stats import bot_stats, get_packages_version
+from .stats import bot_stats, get_packages_version, analytics_stats
 from .status import task_status, status_pages
 from .users_settings import get_users_settings, edit_user_settings, send_user_settings
 from .ytdlp import ytdl, ytdl_leech
@@ -83,6 +83,7 @@ __all__ = [
     "log",
     "run_shell",
     "bot_stats",
+    "analytics_stats",
     "get_packages_version",
     "task_status",
     "status_pages",

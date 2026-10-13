@@ -348,3 +348,10 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
+    TgClient.bot.add_handler(
+        MessageHandler(
+            analytics_stats,
+            filters=command(BotCommands.AnalyticsCommand, case_sensitive=True)
+            & CustomFilters.owner,
+        )
+    )
